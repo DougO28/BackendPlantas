@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, F, Q, FloatField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, TruncDate
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -59,48 +59,80 @@ class DashboardEstadisticasView(APIView):
     permission_classes = [IsAuthenticated, EsPersonalViveroOAdmin]
     
     def get(self, request):
-        hoy = datetime.now().date()
-        inicio_semana = hoy - timedelta(days=hoy.weekday())
-        inicio_mes = hoy.replace(day=1)
-        
-        # ============= VENTAS =============
-        # Ventas de hoy
-        ventas_hoy = Pedido.objects.filter(
-            fecha_pedido__date=hoy,
+        # 🔧 USAR timezone.now() y timezone.localtime() para zona horaria correcta
+        # 🔧 Usar timezone.localtime() para obtener la fecha local
+        ahora_local = timezone.localtime(timezone.now())
+        hoy = ahora_local.date()
+
+        # ⚠️ IMPORTANTE: Para las consultas, usar __date directamente con la fecha local
+        # pero MySQL puede usar UTC, así que convertimos primero
+
+        print(f"\n{'='*50}")
+        print(f"🕐 Ahora (timezone aware): {timezone.now()}")
+        print(f"🕐 Ahora (local): {ahora_local}")
+        print(f"📅 Hoy (local date): {hoy}")
+
+        # ✅ SOLUCIÓN: Consultar usando rangos de datetime en lugar de __date
+        inicio_hoy = timezone.make_aware(
+            timezone.datetime.combine(hoy, timezone.datetime.min.time())
+        )
+        fin_hoy = timezone.make_aware(
+            timezone.datetime.combine(hoy, timezone.datetime.max.time())
+        )
+
+        print(f"⏰ Rango de búsqueda HOY:")
+        print(f"   Inicio: {inicio_hoy}")
+        print(f"   Fin: {fin_hoy}")
+
+        # Ventas de hoy (usando rango de datetime)
+        ventas_hoy_query = Pedido.objects.filter(
+            fecha_pedido__gte=inicio_hoy,
+            fecha_pedido__lte=fin_hoy,
             activo=True
-        ).exclude(estado='cancelado').aggregate(
+        )
+        print(f"💰 Pedidos encontrados para HOY: {ventas_hoy_query.count()}")
+
+        ventas_hoy = ventas_hoy_query.exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-        
+        print(f"💰 Total ventas hoy: {ventas_hoy}")
+
         # Ventas de la semana
+        inicio_semana = hoy - timedelta(days=hoy.weekday())
+        inicio_semana_dt = timezone.make_aware(
+            timezone.datetime.combine(inicio_semana, timezone.datetime.min.time())
+        )
+
         ventas_semana = Pedido.objects.filter(
-            fecha_pedido__date__gte=inicio_semana,
+            fecha_pedido__gte=inicio_semana_dt,
             activo=True
         ).exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-        
+
         # Ventas del mes
+        inicio_mes = hoy.replace(day=1)
+        inicio_mes_dt = timezone.make_aware(
+            timezone.datetime.combine(inicio_mes, timezone.datetime.min.time())
+        )
+
         ventas_mes = Pedido.objects.filter(
-            fecha_pedido__date__gte=inicio_mes,
+            fecha_pedido__gte=inicio_mes_dt,
             activo=True
         ).exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-        
+
         # ============= PEDIDOS =============
-        pedidos_hoy = Pedido.objects.filter(
-            fecha_pedido__date=hoy,
-            activo=True
-        ).count()
-        
+        pedidos_hoy = ventas_hoy_query.count()
+
         pedidos_semana = Pedido.objects.filter(
-            fecha_pedido__date__gte=inicio_semana,
+            fecha_pedido__gte=inicio_semana_dt,
             activo=True
         ).count()
-        
+
         pedidos_mes = Pedido.objects.filter(
-            fecha_pedido__date__gte=inicio_mes,
+            fecha_pedido__gte=inicio_mes_dt,
             activo=True
         ).count()
         
@@ -165,23 +197,49 @@ class DashboardEstadisticasView(APIView):
             for p in stock_bajo
         ]
         
-        # ============= VENTAS ÚLTIMOS 7 DÍAS =============
+                # ============= VENTAS ÚLTIMOS 7 DÍAS =============
         ventas_diarias = []
+
+        # Calcular rango de fechas (últimos 7 días)
+        fecha_inicio = hoy - timedelta(days=6)
+
+        print(f"\n📊 Consultando ventas desde {fecha_inicio} hasta {hoy}")
+
+        # Para cada día, crear rangos de datetime
         for i in range(6, -1, -1):
             fecha = hoy - timedelta(days=i)
+            
+            # 🔧 Crear rango de datetime para ese día
+            inicio_dia = timezone.make_aware(
+                timezone.datetime.combine(fecha, timezone.datetime.min.time())
+            )
+            fin_dia = timezone.make_aware(
+                timezone.datetime.combine(fecha, timezone.datetime.max.time())
+            )
+            
+            # Consultar pedidos de ese día
             ventas_dia = Pedido.objects.filter(
-                fecha_pedido__date=fecha,
+                fecha_pedido__gte=inicio_dia,
+                fecha_pedido__lte=fin_dia,
                 activo=True
             ).exclude(estado='cancelado').aggregate(
                 total=Sum('total'),
                 cantidad=Count('id')
             )
             
+            total = float(ventas_dia['total'] or 0)
+            cantidad = ventas_dia['cantidad'] or 0
+            
             ventas_diarias.append({
                 'fecha': fecha.strftime('%Y-%m-%d'),
-                'total': float(ventas_dia['total'] or 0),
-                'cantidad_pedidos': ventas_dia['cantidad'] or 0
+                'total': total,
+                'cantidad_pedidos': cantidad
             })
+            
+            emoji = "✅" if cantidad > 0 else "⭕"
+            print(f"{emoji} {fecha}: Q{total:.2f} ({cantidad} pedidos)")
+
+        print(f"{'='*50}\n")
         
         # ============= RESPUESTA =============
         data = {
@@ -232,7 +290,7 @@ class MetricasView(APIView):
     
     def _metricas_admin(self):
         """Métricas para administradores"""
-        hoy = timezone.now().date()
+        hoy = timezone.localtime(timezone.now()).date()
         
         data = {
             'pedidos_hoy': Pedido.objects.filter(fecha_pedido__date=hoy).count(),

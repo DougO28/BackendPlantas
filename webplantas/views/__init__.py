@@ -20,9 +20,10 @@ from .logistica import RutaEntregaViewSet, VehiculoViewSet
 from .notificaciones import NotificacionViewSet
 
 # Dashboard
-from .dashboard import DashboardView, MetricasView
+from .dashboard import DashboardView, MetricasView, DashboardEstadisticasView
 
-from .dashboard import DashboardEstadisticasView
+# Test Data (TEMPORAL)
+from .test_data import GenerarDatosPruebaView  # ✅ AGREGAR
 
 __all__ = [
     # Auth
@@ -47,5 +48,8 @@ __all__ = [
     'NotificacionViewSet',
     
     # Dashboard
-    'DashboardView', 'MetricasView',
+    'DashboardView', 'MetricasView', 'DashboardEstadisticasView',
+    
+    # Test Data (TEMPORAL)
+    'GenerarDatosPruebaView',  # ✅ AGREGAR
 ]

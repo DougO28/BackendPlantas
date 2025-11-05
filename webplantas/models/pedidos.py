@@ -1,5 +1,6 @@
 from django.db import models
 from decimal import Decimal
+from django.utils import timezone
 
 ESTADOS_PEDIDO = [
     ('recibido', 'Recibido'),
@@ -21,7 +22,7 @@ class Pedido(models.Model):
     
     # Estado y fechas
     estado = models.CharField(max_length=20, choices=ESTADOS_PEDIDO, default='recibido')
-    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    fecha_pedido = models.DateTimeField(default=timezone.now)
     fecha_entrega_estimada = models.DateField(null=True, blank=True)
     fecha_entrega_real = models.DateField(null=True, blank=True)
     

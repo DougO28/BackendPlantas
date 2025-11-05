@@ -1,3 +1,4 @@
+# Backend/config/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -5,7 +6,6 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 from webplantas.views import DashboardEstadisticasView
-
 from webplantas.views import (
     # Auth
     CustomTokenObtainPairView, ChangePasswordView, RegisterView,
@@ -18,6 +18,7 @@ from webplantas.views import (
     NotificacionViewSet,
     # APIViews
     DashboardView, MetricasView,
+    GenerarDatosPruebaView,  # ✅ AGREGAR
 )
 
 # Router principal
@@ -49,6 +50,9 @@ urlpatterns = [
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
     path('api/metricas/', MetricasView.as_view(), name='metricas'),
     path('api/dashboard/estadisticas/', DashboardEstadisticasView.as_view(), name='dashboard-estadisticas'),
+    
+    # ✅ AGREGAR: Test Data (TEMPORAL)
+    path('api/test/generar-datos/', GenerarDatosPruebaView.as_view(), name='generar-datos-prueba'),
     
     # Incluir todas las rutas del router
     path('api/', include(router.urls)),

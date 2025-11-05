@@ -1,3 +1,4 @@
+# Backend/webplantas/serializers/logistica.py
 from rest_framework import serializers
 from webplantas.models import RutaEntrega, PedidoRuta, Vehiculo
 from .pedidos import PedidoListSerializer
@@ -18,7 +19,7 @@ class PedidoRutaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PedidoRuta
         fields = [
-            'id', 'pedido', 'pedido_codigo', 'orden_entrega', 
+            'id', 'pedido', 'pedido_codigo', 'orden_entrega',
             'entregado', 'hora_llegada', 'hora_salida',
             'receptor_nombre', 'receptor_documento', 'observaciones_entrega'
         ]
@@ -27,33 +28,53 @@ class PedidoRutaSerializer(serializers.ModelSerializer):
 class RutaEntregaListSerializer(serializers.ModelSerializer):
     """Para listar rutas (vista resumida)"""
     tecnico_nombre = serializers.CharField(source='tecnico_campo.nombre_completo', read_only=True)
-    vehiculo_placa = serializers.CharField(source='vehiculo.placa', read_only=True)
+    vehiculo_placa = serializers.CharField(source='vehiculo.placa', read_only=True, allow_null=True)
+    vehiculo_detalle = VehiculoSerializer(source='vehiculo', read_only=True)  # ✅ AGREGAR
     departamento_nombre = serializers.CharField(source='departamento.nombre', read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
-    cantidad_pedidos = serializers.SerializerMethodField()
+    total_pedidos = serializers.SerializerMethodField()  # ✅ CAMBIAR nombre
+    pedidos_entregados = serializers.SerializerMethodField()  # ✅ AGREGAR
     
     class Meta:
         model = RutaEntrega
         fields = [
-            'id', 'codigo_ruta', 'nombre_ruta', 'tecnico_nombre',
-            'vehiculo_placa', 'fecha_planificada', 'estado', 'estado_display',
-            'departamento_nombre', 'cantidad_pedidos'
+            'id', 'codigo_ruta', 'nombre_ruta', 
+            'tecnico_campo', 'tecnico_nombre',  # ✅ AGREGAR tecnico_campo (id)
+            'vehiculo', 'vehiculo_placa', 'vehiculo_detalle',  # ✅ AGREGAR vehiculo (id)
+            'fecha_planificada', 'fecha_inicio', 'fecha_fin',  # ✅ AGREGAR fechas
+            'estado', 'estado_display',
+            'departamento', 'departamento_nombre',  # ✅ AGREGAR departamento (id)
+            'total_pedidos', 'pedidos_entregados',  # ✅ CAMBIAR
+            'observaciones'  # ✅ AGREGAR
         ]
     
-    def get_cantidad_pedidos(self, obj):
+    def get_total_pedidos(self, obj):
         return obj.pedidos.count()
+    
+    def get_pedidos_entregados(self, obj):  # ✅ AGREGAR
+        return obj.pedidos.filter(entregado=True).count()
 
 
 class RutaEntregaDetailSerializer(serializers.ModelSerializer):
     """Para detalles completos de la ruta"""
     tecnico_campo = UsuarioListSerializer(read_only=True)
+    tecnico_nombre = serializers.CharField(source='tecnico_campo.nombre_completo', read_only=True)  # ✅ AGREGAR
     vehiculo = VehiculoSerializer(read_only=True)
+    vehiculo_detalle = VehiculoSerializer(source='vehiculo', read_only=True)  # ✅ AGREGAR
     pedidos = PedidoRutaSerializer(many=True, read_only=True)
     departamento_nombre = serializers.CharField(source='departamento.nombre', read_only=True)
+    total_pedidos = serializers.SerializerMethodField()  # ✅ AGREGAR
+    pedidos_entregados = serializers.SerializerMethodField()  # ✅ AGREGAR
     
     class Meta:
         model = RutaEntrega
         fields = '__all__'
+    
+    def get_total_pedidos(self, obj):  # ✅ AGREGAR
+        return obj.pedidos.count()
+    
+    def get_pedidos_entregados(self, obj):  # ✅ AGREGAR
+        return obj.pedidos.filter(entregado=True).count()
 
 
 class RutaEntregaCreateSerializer(serializers.ModelSerializer):
@@ -67,7 +88,7 @@ class RutaEntregaCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RutaEntrega
         fields = [
-            'nombre_ruta', 'tecnico_campo', 'vehiculo', 
+            'nombre_ruta', 'tecnico_campo', 'vehiculo',
             'fecha_planificada', 'departamento', 'observaciones',
             'pedidos_ids'
         ]
