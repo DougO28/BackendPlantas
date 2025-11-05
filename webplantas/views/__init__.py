@@ -1,3 +1,5 @@
+# Backend/webplantas/views/__init__.py
+
 # Auth
 from .auth import CustomTokenObtainPairView, ChangePasswordView, RegisterView
 
@@ -20,11 +22,17 @@ from .logistica import RutaEntregaViewSet, VehiculoViewSet
 from .notificaciones import NotificacionViewSet
 
 # Dashboard
-from .dashboard import DashboardView, MetricasView, DashboardEstadisticasView
+from .dashboard import (
+    DashboardView, 
+    MetricasView, 
+    DashboardEstadisticasView,
+    ExportarExcelView  
+)
 
 # Test Data (TEMPORAL)
-from .test_data import GenerarDatosPruebaView  # ✅ AGREGAR
+from .test_data import GenerarDatosPruebaView 
 
+ 
 __all__ = [
     # Auth
     'CustomTokenObtainPairView', 'ChangePasswordView', 'RegisterView',
@@ -48,8 +56,11 @@ __all__ = [
     'NotificacionViewSet',
     
     # Dashboard
-    'DashboardView', 'MetricasView', 'DashboardEstadisticasView',
+    'DashboardView', 
+    'MetricasView', 
+    'DashboardEstadisticasView',
+    'ExportarExcelView',  # ✅ AGREGADO
     
     # Test Data (TEMPORAL)
-    'GenerarDatosPruebaView',  # ✅ AGREGAR
+    'GenerarDatosPruebaView',
 ]

@@ -5,7 +5,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
-from webplantas.views import DashboardEstadisticasView
 from webplantas.views import (
     # Auth
     CustomTokenObtainPairView, ChangePasswordView, RegisterView,
@@ -16,9 +15,11 @@ from webplantas.views import (
     PedidoViewSet,
     RutaEntregaViewSet, VehiculoViewSet,
     NotificacionViewSet,
-    # APIViews
-    DashboardView, MetricasView,
-    GenerarDatosPruebaView,  # ✅ AGREGAR
+    # APIViews - Dashboard
+    DashboardView, DashboardEstadisticasView, MetricasView,
+    ExportarExcelView,
+    # APIViews - Otros
+    GenerarDatosPruebaView,
 )
 
 # Router principal
@@ -48,10 +49,11 @@ urlpatterns = [
     
     # Dashboard y Métricas
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
-    path('api/metricas/', MetricasView.as_view(), name='metricas'),
     path('api/dashboard/estadisticas/', DashboardEstadisticasView.as_view(), name='dashboard-estadisticas'),
+    path('api/dashboard/exportar-excel/', ExportarExcelView.as_view(), name='exportar-excel'),
+    path('api/metricas/', MetricasView.as_view(), name='metricas'),
     
-    # ✅ AGREGAR: Test Data (TEMPORAL)
+    # Test Data (TEMPORAL - solo para desarrollo)
     path('api/test/generar-datos/', GenerarDatosPruebaView.as_view(), name='generar-datos-prueba'),
     
     # Incluir todas las rutas del router

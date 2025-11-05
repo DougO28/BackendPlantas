@@ -2,11 +2,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.http import HttpResponse
 from django.db.models import Sum, Count, F, Q, FloatField
 from django.db.models.functions import Cast, TruncDate
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
+
 
 from webplantas.models import Pedido, DetallePedido, Usuario, CatalogoPilon, RutaEntrega
 from webplantas.permissions import EsPersonalViveroOAdmin
@@ -59,78 +61,116 @@ class DashboardEstadisticasView(APIView):
     permission_classes = [IsAuthenticated, EsPersonalViveroOAdmin]
     
     def get(self, request):
-        # 🔧 USAR timezone.now() y timezone.localtime() para zona horaria correcta
-        # 🔧 Usar timezone.localtime() para obtener la fecha local
+        # 🔧 Obtener parámetros de filtro
+        filtro = request.query_params.get('filtro', 'ultimos_7_dias')
+        fecha_inicio_param = request.query_params.get('fecha_inicio')
+        fecha_fin_param = request.query_params.get('fecha_fin')
+        
+        # 🔧 Usar timezone.localtime() para zona horaria correcta
         ahora_local = timezone.localtime(timezone.now())
         hoy = ahora_local.date()
-
-        # ⚠️ IMPORTANTE: Para las consultas, usar __date directamente con la fecha local
-        # pero MySQL puede usar UTC, así que convertimos primero
-
+        
         print(f"\n{'='*50}")
-        print(f"🕐 Ahora (timezone aware): {timezone.now()}")
-        print(f"🕐 Ahora (local): {ahora_local}")
-        print(f"📅 Hoy (local date): {hoy}")
-
-        # ✅ SOLUCIÓN: Consultar usando rangos de datetime en lugar de __date
+        print(f"🔍 FILTRO SELECCIONADO: {filtro}")
+        print(f"📅 HOY: {hoy}")
+        
+        # ============= CALCULAR RANGO DE FECHAS SEGÚN FILTRO =============
+        if filtro == 'personalizado' and fecha_inicio_param and fecha_fin_param:
+            # Filtro personalizado
+            fecha_inicio = timezone.datetime.strptime(fecha_inicio_param, '%Y-%m-%d').date()
+            fecha_fin = timezone.datetime.strptime(fecha_fin_param, '%Y-%m-%d').date()
+            dias_rango = (fecha_fin - fecha_inicio).days + 1
+            print(f"📅 Personalizado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            
+        elif filtro == 'ultimos_30_dias':
+            fecha_inicio = hoy - timedelta(days=29)
+            fecha_fin = hoy
+            dias_rango = 30
+            print(f"📅 Últimos 30 días: {fecha_inicio} a {fecha_fin}")
+            
+        elif filtro == 'este_mes':
+            fecha_inicio = hoy.replace(day=1)
+            fecha_fin = hoy
+            dias_rango = (fecha_fin - fecha_inicio).days + 1
+            print(f"📅 Este mes: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            
+        elif filtro == 'mes_pasado':
+            # Primer día del mes pasado
+            primer_dia_este_mes = hoy.replace(day=1)
+            ultimo_dia_mes_pasado = primer_dia_este_mes - timedelta(days=1)
+            fecha_inicio = ultimo_dia_mes_pasado.replace(day=1)
+            fecha_fin = ultimo_dia_mes_pasado
+            dias_rango = (fecha_fin - fecha_inicio).days + 1
+            print(f"📅 Mes pasado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            
+        else:  # 'ultimos_7_dias' (default)
+            fecha_inicio = hoy - timedelta(days=6)
+            fecha_fin = hoy
+            dias_rango = 7
+            print(f"📅 Últimos 7 días: {fecha_inicio} a {fecha_fin}")
+        
+        # ============= CREAR RANGOS DE DATETIME =============
+        inicio_rango_dt = timezone.make_aware(
+            timezone.datetime.combine(fecha_inicio, timezone.datetime.min.time())
+        )
+        fin_rango_dt = timezone.make_aware(
+            timezone.datetime.combine(fecha_fin, timezone.datetime.max.time())
+        )
+        
+        # Para las estadísticas generales (hoy, semana, mes)
         inicio_hoy = timezone.make_aware(
             timezone.datetime.combine(hoy, timezone.datetime.min.time())
         )
         fin_hoy = timezone.make_aware(
             timezone.datetime.combine(hoy, timezone.datetime.max.time())
         )
-
-        print(f"⏰ Rango de búsqueda HOY:")
-        print(f"   Inicio: {inicio_hoy}")
-        print(f"   Fin: {fin_hoy}")
-
-        # Ventas de hoy (usando rango de datetime)
+        
+        inicio_semana = hoy - timedelta(days=hoy.weekday())
+        inicio_semana_dt = timezone.make_aware(
+            timezone.datetime.combine(inicio_semana, timezone.datetime.min.time())
+        )
+        
+        inicio_mes = hoy.replace(day=1)
+        inicio_mes_dt = timezone.make_aware(
+            timezone.datetime.combine(inicio_mes, timezone.datetime.min.time())
+        )
+        
+        # ============= VENTAS =============
+        # Ventas de hoy
         ventas_hoy_query = Pedido.objects.filter(
             fecha_pedido__gte=inicio_hoy,
             fecha_pedido__lte=fin_hoy,
             activo=True
         )
-        print(f"💰 Pedidos encontrados para HOY: {ventas_hoy_query.count()}")
-
+        
         ventas_hoy = ventas_hoy_query.exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-        print(f"💰 Total ventas hoy: {ventas_hoy}")
-
+        
         # Ventas de la semana
-        inicio_semana = hoy - timedelta(days=hoy.weekday())
-        inicio_semana_dt = timezone.make_aware(
-            timezone.datetime.combine(inicio_semana, timezone.datetime.min.time())
-        )
-
         ventas_semana = Pedido.objects.filter(
             fecha_pedido__gte=inicio_semana_dt,
             activo=True
         ).exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-
+        
         # Ventas del mes
-        inicio_mes = hoy.replace(day=1)
-        inicio_mes_dt = timezone.make_aware(
-            timezone.datetime.combine(inicio_mes, timezone.datetime.min.time())
-        )
-
         ventas_mes = Pedido.objects.filter(
             fecha_pedido__gte=inicio_mes_dt,
             activo=True
         ).exclude(estado='cancelado').aggregate(
             total=Sum('total')
         )['total'] or Decimal('0.00')
-
+        
         # ============= PEDIDOS =============
         pedidos_hoy = ventas_hoy_query.count()
-
+        
         pedidos_semana = Pedido.objects.filter(
             fecha_pedido__gte=inicio_semana_dt,
             activo=True
         ).count()
-
+        
         pedidos_mes = Pedido.objects.filter(
             fecha_pedido__gte=inicio_mes_dt,
             activo=True
@@ -145,9 +185,11 @@ class DashboardEstadisticasView(APIView):
             pedidos_por_estado[estado['estado']] = estado['total']
         
         # ============= TOP 5 PRODUCTOS MÁS VENDIDOS =============
+        # Usar el rango del filtro seleccionado
         productos_vendidos = DetallePedido.objects.filter(
             pedido__activo=True,
-            pedido__fecha_pedido__date__gte=inicio_mes
+            pedido__fecha_pedido__gte=inicio_rango_dt,
+            pedido__fecha_pedido__lte=fin_rango_dt
         ).exclude(
             pedido__estado='cancelado'
         ).values(
@@ -197,19 +239,16 @@ class DashboardEstadisticasView(APIView):
             for p in stock_bajo
         ]
         
-                # ============= VENTAS ÚLTIMOS 7 DÍAS =============
+        # ============= VENTAS DIARIAS DEL RANGO =============
         ventas_diarias = []
-
-        # Calcular rango de fechas (últimos 7 días)
-        fecha_inicio = hoy - timedelta(days=6)
-
-        print(f"\n📊 Consultando ventas desde {fecha_inicio} hasta {hoy}")
-
-        # Para cada día, crear rangos de datetime
-        for i in range(6, -1, -1):
-            fecha = hoy - timedelta(days=i)
+        
+        print(f"\n📊 Generando ventas diarias para {dias_rango} días")
+        
+        # Generar ventas para cada día del rango
+        for i in range(dias_rango):
+            fecha = fecha_inicio + timedelta(days=i)
             
-            # 🔧 Crear rango de datetime para ese día
+            # Crear rango de datetime para ese día
             inicio_dia = timezone.make_aware(
                 timezone.datetime.combine(fecha, timezone.datetime.min.time())
             )
@@ -237,8 +276,9 @@ class DashboardEstadisticasView(APIView):
             })
             
             emoji = "✅" if cantidad > 0 else "⭕"
-            print(f"{emoji} {fecha}: Q{total:.2f} ({cantidad} pedidos)")
-
+            if cantidad > 0:
+                print(f"{emoji} {fecha}: Q{total:.2f} ({cantidad} pedidos)")
+        
         print(f"{'='*50}\n")
         
         # ============= RESPUESTA =============
@@ -304,3 +344,221 @@ class MetricasView(APIView):
         }
         
         return Response(data)
+
+
+class ExportarExcelView(APIView):
+    """Vista para exportar estadísticas del dashboard a Excel"""
+    permission_classes = [IsAuthenticated, EsPersonalViveroOAdmin]
+    
+    def get(self, request):
+        # ✅ IMPORTS DENTRO DE LA FUNCIÓN (Evita el warning de Pylance)
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+            from django.http import HttpResponse
+        except ImportError:
+            return Response({
+                'error': 'openpyxl no está instalado. Ejecuta: pip install openpyxl'
+            }, status=500)
+        
+        # Obtener parámetros de filtro (mismo que DashboardEstadisticasView)
+        filtro = request.query_params.get('filtro', 'ultimos_7_dias')
+        fecha_inicio_param = request.query_params.get('fecha_inicio')
+        fecha_fin_param = request.query_params.get('fecha_fin')
+        
+        ahora_local = timezone.localtime(timezone.now())
+        hoy = ahora_local.date()
+        
+        # Calcular rango de fechas
+        if filtro == 'personalizado' and fecha_inicio_param and fecha_fin_param:
+            fecha_inicio = timezone.datetime.strptime(fecha_inicio_param, '%Y-%m-%d').date()
+            fecha_fin = timezone.datetime.strptime(fecha_fin_param, '%Y-%m-%d').date()
+        elif filtro == 'ultimos_30_dias':
+            fecha_inicio = hoy - timedelta(days=29)
+            fecha_fin = hoy
+        elif filtro == 'este_mes':
+            fecha_inicio = hoy.replace(day=1)
+            fecha_fin = hoy
+        elif filtro == 'mes_pasado':
+            primer_dia_este_mes = hoy.replace(day=1)
+            ultimo_dia_mes_pasado = primer_dia_este_mes - timedelta(days=1)
+            fecha_inicio = ultimo_dia_mes_pasado.replace(day=1)
+            fecha_fin = ultimo_dia_mes_pasado
+        else:  # ultimos_7_dias
+            fecha_inicio = hoy - timedelta(days=6)
+            fecha_fin = hoy
+        
+        # Crear rangos datetime
+        inicio_rango_dt = timezone.make_aware(
+            timezone.datetime.combine(fecha_inicio, timezone.datetime.min.time())
+        )
+        fin_rango_dt = timezone.make_aware(
+            timezone.datetime.combine(fecha_fin, timezone.datetime.max.time())
+        )
+        
+        # Obtener datos
+        ventas_total = Pedido.objects.filter(
+            fecha_pedido__gte=inicio_rango_dt,
+            fecha_pedido__lte=fin_rango_dt,
+            activo=True
+        ).exclude(estado='cancelado').aggregate(
+            total=Sum('total'),
+            cantidad=Count('id')
+        )
+        
+        # Top productos
+        top_productos = DetallePedido.objects.filter(
+            pedido__activo=True,
+            pedido__fecha_pedido__gte=inicio_rango_dt,
+            pedido__fecha_pedido__lte=fin_rango_dt
+        ).exclude(
+            pedido__estado='cancelado'
+        ).values(
+            'pilon__nombre_variedad',
+            'pilon__categoria__nombre'
+        ).annotate(
+            cantidad_vendida=Sum('cantidad'),
+            total_vendido=Sum(F('cantidad') * F('precio_unitario'))
+        ).order_by('-cantidad_vendida')[:10]
+        
+        # Stock bajo
+        stock_bajo = CatalogoPilon.objects.filter(
+            activo=True,
+            stock__lte=F('stock_minimo')
+        ).values(
+            'nombre_variedad',
+            'categoria__nombre',
+            'stock',
+            'stock_minimo'
+        ).order_by('stock')[:20]
+        
+        # Crear workbook
+        wb = Workbook()
+        
+        # ========== HOJA 1: RESUMEN ==========
+        ws1 = wb.active
+        ws1.title = "Resumen"
+        
+        # Estilos
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        title_font = Font(bold=True, size=14)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Título
+        ws1['A1'] = "REPORTE DE ESTADÍSTICAS - VIVERO"
+        ws1['A1'].font = title_font
+        ws1.merge_cells('A1:C1')
+        
+        ws1['A2'] = f"Período: {fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}"
+        ws1['A2'].font = Font(italic=True)
+        ws1.merge_cells('A2:C2')
+        
+        ws1['A3'] = f"Generado: {ahora_local.strftime('%d/%m/%Y %H:%M')}"
+        ws1['A3'].font = Font(italic=True, size=9)
+        ws1.merge_cells('A3:C3')
+        
+        # Resumen de ventas
+        ws1['A5'] = "RESUMEN DE VENTAS"
+        ws1['A5'].font = Font(bold=True, size=12)
+        
+        ws1.append([])  # Línea 6 vacía
+        
+        headers_resumen = ["Métrica", "Valor"]
+        ws1.append(headers_resumen)
+        
+        for cell in ws1[7]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+            cell.border = border
+        
+        datos_resumen = [
+            ["Total de Pedidos", ventas_total['cantidad'] or 0],
+            ["Total de Ventas", f"Q {float(ventas_total['total'] or 0):,.2f}"],
+            ["Promedio por Pedido", f"Q {float(ventas_total['total'] or 0) / max(ventas_total['cantidad'] or 1, 1):,.2f}"],
+        ]
+        
+        for fila in datos_resumen:
+            ws1.append(fila)
+        
+        # Ajustar anchos
+        ws1.column_dimensions['A'].width = 30
+        ws1.column_dimensions['B'].width = 20
+        
+        # ========== HOJA 2: TOP PRODUCTOS ==========
+        ws2 = wb.create_sheet("Top Productos")
+        
+        ws2['A1'] = "TOP 10 PRODUCTOS MÁS VENDIDOS"
+        ws2['A1'].font = title_font
+        ws2.merge_cells('A1:D1')
+        
+        ws2.append([])  # Línea 2 vacía
+        
+        headers_productos = ["Producto", "Categoría", "Cantidad Vendida", "Total Vendido"]
+        ws2.append(headers_productos)
+        
+        for cell in ws2[3]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+            cell.border = border
+        
+        for producto in top_productos:
+            ws2.append([
+                producto['pilon__nombre_variedad'],
+                producto['pilon__categoria__nombre'] or 'Sin categoría',
+                producto['cantidad_vendida'],
+                f"Q {float(producto['total_vendido']):,.2f}"
+            ])
+        
+        ws2.column_dimensions['A'].width = 35
+        ws2.column_dimensions['B'].width = 20
+        ws2.column_dimensions['C'].width = 18
+        ws2.column_dimensions['D'].width = 18
+        
+        # ========== HOJA 3: STOCK BAJO ==========
+        ws3 = wb.create_sheet("Stock Bajo")
+        
+        ws3['A1'] = "PRODUCTOS CON STOCK BAJO"
+        ws3['A1'].font = title_font
+        ws3.merge_cells('A1:D1')
+        
+        ws3.append([])
+        
+        headers_stock = ["Producto", "Categoría", "Stock Actual", "Stock Mínimo"]
+        ws3.append(headers_stock)
+        
+        for cell in ws3[3]:
+            cell.fill = PatternFill(start_color="E74C3C", end_color="E74C3C", fill_type="solid")
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+            cell.border = border
+        
+        for item in stock_bajo:
+            ws3.append([
+                item['nombre_variedad'],
+                item['categoria__nombre'] or 'Sin categoría',
+                item['stock'],
+                item['stock_minimo']
+            ])
+        
+        ws3.column_dimensions['A'].width = 35
+        ws3.column_dimensions['B'].width = 20
+        ws3.column_dimensions['C'].width = 15
+        ws3.column_dimensions['D'].width = 15
+        
+        # Preparar respuesta HTTP
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        nombre_archivo = f'estadisticas_vivero_{fecha_inicio.strftime("%Y%m%d")}_{fecha_fin.strftime("%Y%m%d")}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename={nombre_archivo}'
+        
+        wb.save(response)
+        return response
