@@ -39,41 +39,41 @@ class RutaEntregaListSerializer(serializers.ModelSerializer):
         model = RutaEntrega
         fields = [
             'id', 'codigo_ruta', 'nombre_ruta', 
-            'tecnico_campo', 'tecnico_nombre',  # ✅ AGREGAR tecnico_campo (id)
-            'vehiculo', 'vehiculo_placa', 'vehiculo_detalle',  # ✅ AGREGAR vehiculo (id)
-            'fecha_planificada', 'fecha_inicio', 'fecha_fin',  # ✅ AGREGAR fechas
+            'tecnico_campo', 'tecnico_nombre',  
+            'vehiculo', 'vehiculo_placa', 'vehiculo_detalle',  
+            'fecha_planificada', 'fecha_inicio', 'fecha_fin',  
             'estado', 'estado_display',
-            'departamento', 'departamento_nombre',  # ✅ AGREGAR departamento (id)
-            'total_pedidos', 'pedidos_entregados',  # ✅ CAMBIAR
-            'observaciones'  # ✅ AGREGAR
+            'departamento', 'departamento_nombre',  
+            'total_pedidos', 'pedidos_entregados',  
+            'observaciones'  
         ]
     
     def get_total_pedidos(self, obj):
         return obj.pedidos.count()
     
-    def get_pedidos_entregados(self, obj):  # ✅ AGREGAR
+    def get_pedidos_entregados(self, obj):  
         return obj.pedidos.filter(entregado=True).count()
 
 
 class RutaEntregaDetailSerializer(serializers.ModelSerializer):
     """Para detalles completos de la ruta"""
     tecnico_campo = UsuarioListSerializer(read_only=True)
-    tecnico_nombre = serializers.CharField(source='tecnico_campo.nombre_completo', read_only=True)  # ✅ AGREGAR
+    tecnico_nombre = serializers.CharField(source='tecnico_campo.nombre_completo', read_only=True)  
     vehiculo = VehiculoSerializer(read_only=True)
-    vehiculo_detalle = VehiculoSerializer(source='vehiculo', read_only=True)  # ✅ AGREGAR
+    vehiculo_detalle = VehiculoSerializer(source='vehiculo', read_only=True)  
     pedidos = PedidoRutaSerializer(many=True, read_only=True)
     departamento_nombre = serializers.CharField(source='departamento.nombre', read_only=True)
-    total_pedidos = serializers.SerializerMethodField()  # ✅ AGREGAR
-    pedidos_entregados = serializers.SerializerMethodField()  # ✅ AGREGAR
+    total_pedidos = serializers.SerializerMethodField()  
+    pedidos_entregados = serializers.SerializerMethodField()  
     
     class Meta:
         model = RutaEntrega
         fields = '__all__'
     
-    def get_total_pedidos(self, obj):  # ✅ AGREGAR
+    def get_total_pedidos(self, obj):  
         return obj.pedidos.count()
     
-    def get_pedidos_entregados(self, obj):  # ✅ AGREGAR
+    def get_pedidos_entregados(self, obj):  
         return obj.pedidos.filter(entregado=True).count()
 
 
