@@ -58,12 +58,12 @@ class GenerarDatosPruebaView(APIView):
                 hoy = ahora.date()
                 
                 print(f"\n{'='*60}")
-                print(f"🧪 GENERANDO DATOS DE PRUEBA")
-                print(f"🕐 Ahora (local): {ahora}")
-                print(f"📅 Hoy (date): {hoy}")
-                print(f"👥 Usuarios disponibles: {len(usuarios)}")
-                print(f"🌱 Productos disponibles: {len(productos)}")
-                print(f"🗺️  Municipios disponibles: {len(municipios)}")
+                print(f" GENERANDO DATOS DE PRUEBA")
+                print(f"Ahora (local): {ahora}")
+                print(f" Hoy (date): {hoy}")
+                print(f" Usuarios disponibles: {len(usuarios)}")
+                print(f" Productos disponibles: {len(productos)}")
+                print(f"  Municipios disponibles: {len(municipios)}")
                 print(f"{'='*60}\n")
                 
                 # Generar pedidos para los últimos 7 días
@@ -73,7 +73,7 @@ class GenerarDatosPruebaView(APIView):
                     # Generar entre 3 y 8 pedidos por día
                     cantidad_pedidos = random.randint(3, 8)
                     
-                    print(f"📅 Generando {cantidad_pedidos} pedidos para {fecha}")
+                    print(f" Generando {cantidad_pedidos} pedidos para {fecha}")
                     
                     for i in range(cantidad_pedidos):
                         # Seleccionar datos aleatorios
@@ -115,12 +115,12 @@ class GenerarDatosPruebaView(APIView):
                             total=Decimal('0.00'),  # Temporal
                             descuento=Decimal('0.00'),
                             canal_origen='web',
-                            observaciones='🧪 Pedido de prueba generado automáticamente',
+                            observaciones=' Pedido de prueba generado automáticamente',
                             pendiente_viaje=False,
-                            activo=True,  # ✅ AGREGAR ESTO
+                            activo=True,  #  AGREGAR ESTO
                         )
                         
-                        # 🔧 SEGUNDO: Agregar productos al pedido
+                        #  SEGUNDO: Agregar productos al pedido
                         cantidad_productos = random.randint(1, 4)
                         productos_pedido = random.sample(productos, min(cantidad_productos, len(productos)))
                         
@@ -131,7 +131,7 @@ class GenerarDatosPruebaView(APIView):
                             precio_unitario = Decimal(str(producto.precio_unitario))
                             subtotal_item = precio_unitario * Decimal(str(cantidad))
                             
-                            # 🔧 NO restamos stock en pedidos de prueba
+                            #  NO restamos stock en pedidos de prueba
                             DetallePedido.objects.create(
                                 pedido=pedido,
                                 pilon=producto,
@@ -142,11 +142,11 @@ class GenerarDatosPruebaView(APIView):
                             
                             total_calculado += subtotal_item
                         
-                        # 🔧 TERCERO: Actualizar el total del pedido
+                        #  TERCERO: Actualizar el total del pedido
                         pedido.total = total_calculado
                         pedido.save(update_fields=['total'])
                         
-                        # 🔍 CUARTO: Verificar que se guardó correctamente
+                        #  CUARTO: Verificar que se guardó correctamente
                         pedido.refresh_from_db()
                         
                         if pedido.total == 0:
@@ -172,11 +172,11 @@ class GenerarDatosPruebaView(APIView):
                         emoji_status = "✅" if total_final > 0 else "❌"
                         print(f"   {emoji_status} Pedido #{pedido.id} ({pedido.codigo_seguimiento}): {fecha_pedido.strftime('%Y-%m-%d %H:%M')} | Estado: {estado} | Total: Q{total_final:.2f}")
                 
-                # 🔍 VERIFICAR: Contar pedidos creados por fecha
+                #  VERIFICAR: Contar pedidos creados por fecha
                 from django.db.models import Sum
                 
                 print(f"\n{'='*60}")
-                print(f"📊 VERIFICACIÓN - Pedidos creados por fecha:")
+                print(f" VERIFICACIÓN - Pedidos creados por fecha:")
                 for dias_atras in range(6, -1, -1):
                     fecha = hoy - timedelta(days=dias_atras)
                     count = Pedido.objects.filter(
@@ -191,7 +191,7 @@ class GenerarDatosPruebaView(APIView):
                 print(f"{'='*60}\n")
                 
                 return Response({
-                    'mensaje': f'✅ Se generaron {pedidos_creados} pedidos de prueba exitosamente',
+                    'mensaje': f' Se generaron {pedidos_creados} pedidos de prueba exitosamente',
                     'total_pedidos': pedidos_creados,
                     'rango_fechas': f'{hoy - timedelta(days=6)} a {hoy}',
                     'zona_horaria': str(timezone.get_current_timezone())
@@ -210,26 +210,26 @@ class GenerarDatosPruebaView(APIView):
         try:
             # Eliminar pedidos que tengan "prueba" en las observaciones
             pedidos_prueba = Pedido.objects.filter(
-                observaciones__icontains='🧪 Pedido de prueba generado automáticamente'
+                observaciones__icontains='Pedido de prueba generado automáticamente'
             )
             
             cantidad = pedidos_prueba.count()
             
-            print(f"\n🗑️  Eliminando {cantidad} pedidos de prueba...")
+            print(f"\n Eliminando {cantidad} pedidos de prueba...")
             
             # Eliminar en cascada (DetallePedido y HistorialEstadoPedido se eliminan automáticamente)
             pedidos_prueba.delete()
             
-            print(f"✅ Pedidos eliminados exitosamente\n")
+            print(f"Pedidos eliminados exitosamente\n")
             
             return Response({
-                'mensaje': f'✅ Se eliminaron {cantidad} pedidos de prueba',
+                'mensaje': f' Se eliminaron {cantidad} pedidos de prueba',
                 'cantidad_eliminada': cantidad
             })
             
         except Exception as e:
             import traceback
-            print(f"\n❌ ERROR al eliminar datos:")
+            print(f"\n ERROR al eliminar datos:")
             print(traceback.format_exc())
             return Response({
                 'error': f'Error al eliminar datos de prueba: {str(e)}'

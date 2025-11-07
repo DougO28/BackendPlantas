@@ -20,6 +20,9 @@ from .catalogo import (
     CatalogoPilonCreateUpdateSerializer,
 )
 
+from .auth import LoginSerializer, ChangePasswordSerializer, RegisterSerializer
+
+
 # Pedidos
 from .pedidos import (
     DetallePedidoSerializer, HistorialEstadoSerializer,

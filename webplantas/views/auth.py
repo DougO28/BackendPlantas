@@ -24,7 +24,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'id': self.user.id,
             'nombre_completo': self.user.nombre_completo,
             'email': self.user.email,
-            'roles': [rol.nombre_rol for rol in self.user.roles.all()]
+            'roles': [rol.nombre_rol for rol in self.user.roles.all()],
+            'is_admin': self.user.is_staff or self.user.email == 'admin@agriconecta.com'
         }
         
         return data

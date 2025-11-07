@@ -21,6 +21,8 @@ from .logistica import RutaEntregaViewSet, VehiculoViewSet
 # Notificaciones
 from .notificaciones import NotificacionViewSet
 
+
+
 # Dashboard
 from .dashboard import (
     DashboardView, 

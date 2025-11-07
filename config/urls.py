@@ -44,8 +44,8 @@ urlpatterns = [
     # Autenticación JWT
     path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('api/auth/register/', RegisterView.as_view(), name='register'),
+    path('api/auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
     
     # Dashboard y Métricas
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
