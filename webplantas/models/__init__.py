@@ -11,7 +11,10 @@ from .catalogo import CategoriaPlanta, CatalogoPilon
 from .pedidos import Pedido, DetallePedido, HistorialEstadoPedido, ESTADOS_PEDIDO
 
 # Importar modelos de logística
-from .logistica import RutaEntrega, PedidoRuta, Vehiculo, ESTADOS_RUTA
+from .logistica import (
+    RutaEntrega, PedidoRuta, Vehiculo, ESTADOS_RUTA,
+    Transportista, DocumentoVehiculo, PuntoSiembra, Finca, ETIQUETAS_RUTA
+)
 
 # Importar modelos de notificaciones
 from .notificaciones import Notificacion
@@ -44,6 +47,11 @@ __all__ = [
     'PedidoRuta',
     'Vehiculo',
     'ESTADOS_RUTA',
+    'ETIQUETAS_RUTA',  
+    'Transportista',  
+    'DocumentoVehiculo',  
+    'PuntoSiembra',  
+    'Finca',  
     
     # Notificaciones
     'Notificacion',

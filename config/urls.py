@@ -20,6 +20,9 @@ from webplantas.views import (
     ExportarExcelView,
     # APIViews - Otros
     GenerarDatosPruebaView,
+
+    TransportistaViewSet, DocumentoVehiculoViewSet, 
+    PuntoSiembraViewSet, FincaViewSet,
 )
 
 # Router principal
@@ -36,6 +39,10 @@ router.register(r'pedidos', PedidoViewSet, basename='pedido')
 router.register(r'rutas', RutaEntregaViewSet, basename='ruta')
 router.register(r'vehiculos', VehiculoViewSet, basename='vehiculo')
 router.register(r'notificaciones', NotificacionViewSet, basename='notificacion')
+router.register(r'transportistas', TransportistaViewSet, basename='transportista')
+router.register(r'documentos-vehiculos', DocumentoVehiculoViewSet, basename='documento-vehiculo')
+router.register(r'puntos-siembra', PuntoSiembraViewSet, basename='punto-siembra')
+router.register(r'fincas', FincaViewSet, basename='finca')
 
 urlpatterns = [
     # Admin de Django

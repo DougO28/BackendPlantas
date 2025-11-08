@@ -20,8 +20,13 @@ from .catalogo import (
     CatalogoPilonCreateUpdateSerializer,
 )
 
-from .auth import LoginSerializer, ChangePasswordSerializer, RegisterSerializer
-
+# Logística - catálogos (CORREGIDO: catalogos_logistica con 's')
+from .catalogos_logistica import (
+    TransportistaSerializer,
+    DocumentoVehiculoSerializer,
+    PuntoSiembraSerializer,
+    FincaSerializer
+)
 
 # Pedidos
 from .pedidos import (
@@ -52,8 +57,12 @@ __all__ = [
     'DepartamentoSerializer', 'MunicipioSerializer', 'ParcelaSerializer',
     
     # Catálogo
-    'CategoriaPlantaSerializer', 'CatalogoPilonSerializer',  # ✅ AGREGADO
+    'CategoriaPlantaSerializer', 'CatalogoPilonSerializer',  
     'CatalogoPilonListSerializer', 'CatalogoPilonCreateUpdateSerializer',
+    
+    # Catálogos Logística
+    'TransportistaSerializer', 'DocumentoVehiculoSerializer',
+    'PuntoSiembraSerializer', 'FincaSerializer',
     
     # Pedidos
     'DetallePedidoSerializer', 'HistorialEstadoSerializer',

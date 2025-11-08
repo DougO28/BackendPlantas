@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from webplantas.models import Rol, Departamento, Municipio, Usuario, UsuarioRol, CategoriaPlanta
+from webplantas.models import Rol, Departamento, Municipio, Usuario, UsuarioRol, CategoriaPlanta, Transportista, PuntoSiembra, Finca, Vehiculo, DocumentoVehiculo
 
 
 class Command(BaseCommand):
@@ -152,3 +152,141 @@ class Command(BaseCommand):
             self.stdout.write('  - Usuario administrador ya existe')
 
         self.stdout.write(self.style.SUCCESS('\n¡Datos iniciales creados exitosamente! ✓'))
+
+                # ============= TRANSPORTISTAS =============
+        self.stdout.write('\nCreando transportistas...')
+        transportistas_data = [
+            {
+                'nombre': 'Transportes Quiché Express',
+                'contacto': 'Juan Pérez',
+                'telefono': '77881234',
+                'email': 'quiche@express.com',
+                'nit': '12345678-9',
+            },
+            {
+                'nombre': 'Logística San Marcos',
+                'contacto': 'María López',
+                'telefono': '77889876',
+                'email': 'sanmarcos@logistica.com',
+                'nit': '98765432-1',
+            },
+            {
+                'nombre': 'Transportes Huehue',
+                'contacto': 'Carlos Gómez',
+                'telefono': '77885555',
+                'email': 'huehue@transportes.com',
+            },
+        ]
+
+        for trans_data in transportistas_data:
+            transportista, created = Transportista.objects.get_or_create(
+                nombre=trans_data['nombre'],
+                defaults=trans_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ Transportista creado: {transportista.nombre}'))
+
+        # ============= PUNTOS DE SIEMBRA =============
+        self.stdout.write('\nCreando puntos de siembra...')
+        quiche = Departamento.objects.get(nombre='Quiché')
+        santa_cruz = Municipio.objects.get(nombre='Santa Cruz del Quiché', departamento=quiche)
+
+        puntos_data = [
+            {
+                'nombre': 'Vivero Central Agriconecta',
+                'contacto': 'Pedro Morales',
+                'telefono': '77123456',
+                'departamento': quiche,
+                'municipio': santa_cruz,
+                'aldea_colonia': 'Zona 3',
+                'referencia_ubicacion': 'A un costado del parque central',
+            },
+        ]
+
+        for punto_data in puntos_data:
+            punto, created = PuntoSiembra.objects.get_or_create(
+                nombre=punto_data['nombre'],
+                defaults=punto_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ Punto de siembra creado: {punto.nombre}'))
+
+        # ============= FINCAS =============
+        self.stdout.write('\nCreando fincas de ejemplo...')
+        fincas_data = [
+            {
+                'nombre': 'Finca Los Pinos',
+                'contacto': 'Roberto García',
+                'telefono': '77234567',
+                'email': 'lospinos@finca.com',
+                'departamento': quiche,
+                'municipio': santa_cruz,
+                'aldea_colonia': 'Aldea Pachitac',
+                'direccion_completa': 'Km 15 carretera a Uspantán, Aldea Pachitac',
+                'referencia_ubicacion': 'Entrada frente a la gasolinera, 2km tierra adentro',
+            },
+        ]
+
+        for finca_data in fincas_data:
+            finca, created = Finca.objects.get_or_create(
+                nombre=finca_data['nombre'],
+                defaults=finca_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ Finca creada: {finca.nombre}'))
+
+        # ============= VEHÍCULOS CON TRANSPORTISTAS =============
+        self.stdout.write('\nCreando vehículos...')
+        trans_quiche = Transportista.objects.get(nombre='Transportes Quiché Express')
+        trans_sanmarcos = Transportista.objects.get(nombre='Logística San Marcos')
+
+        vehiculos_data = [
+            {
+                'placa': 'P-001ABC',
+                'tipo': 'camion',
+                'marca': 'Isuzu',
+                'modelo': 'NPR',
+                'año': 2020,
+                'capacidad_carga_kg': 3500,
+                'capacidad_volumen_m3': 20,
+                'largo_m': 4.5,
+                'ancho_m': 2.0,
+                'alto_m': 2.2,
+                'transportista': trans_quiche,
+                'observaciones': 'Ideal para terracería moderada',
+            },
+            {
+                'placa': 'P-002XYZ',
+                'tipo': 'pickup',
+                'marca': 'Toyota',
+                'modelo': 'Hilux',
+                'año': 2019,
+                'capacidad_carga_kg': 1000,
+                'capacidad_volumen_m3': 5,
+                'largo_m': 1.8,
+                'ancho_m': 1.6,
+                'alto_m': 0.5,
+                'transportista': trans_sanmarcos,
+                'observaciones': 'Para entregas rápidas en zonas rurales',
+            },
+        ]
+
+        for veh_data in vehiculos_data:
+            vehiculo, created = Vehiculo.objects.get_or_create(
+                placa=veh_data['placa'],
+                defaults=veh_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ Vehículo creado: {vehiculo.placa}'))
+                
+                # Crear documento de póliza
+                from datetime import date, timedelta
+                DocumentoVehiculo.objects.create(
+                    vehiculo=vehiculo,
+                    tipo='poliza',
+                    numero_documento=f'POL-{vehiculo.placa}',
+                    fecha_emision=date.today() - timedelta(days=180),
+                    fecha_vencimiento=date.today() + timedelta(days=185),
+                    observaciones='Póliza de seguro contra todo riesgo'
+                )
+                self.stdout.write(f'    • Documento de póliza creado')

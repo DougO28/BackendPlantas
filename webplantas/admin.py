@@ -5,6 +5,8 @@ from webplantas.models import (
     CategoriaPlanta, CatalogoPilon,
     Pedido, DetallePedido, HistorialEstadoPedido,
     RutaEntrega, PedidoRuta, Vehiculo,
+    
+    Transportista, DocumentoVehiculo, PuntoSiembra, Finca,
     Notificacion
 )
 
@@ -67,23 +69,71 @@ class HistorialEstadoPedidoAdmin(admin.ModelAdmin):
     list_display = ['pedido', 'estado_anterior', 'estado_nuevo', 'fecha_cambio', 'usuario_cambio']
     list_filter = ['estado_nuevo']
 
-# Logística
+# ============= LOGÍSTICA =============
 @admin.register(RutaEntrega)
 class RutaEntregaAdmin(admin.ModelAdmin):
-    list_display = ['codigo_ruta', 'nombre_ruta', 'tecnico_campo', 'fecha_planificada', 'estado']
-    list_filter = ['estado', 'departamento']
-    search_fields = ['codigo_ruta', 'nombre_ruta']
+    list_display = ['codigo_ruta', 'nombre_ruta', 'tecnico_campo', 'fecha_planificada', 'estado', 'vehiculo']
+    list_filter = ['estado', 'departamento', 'fecha_planificada']
+    search_fields = ['codigo_ruta', 'nombre_ruta', 'tecnico_campo__nombre_completo']
+    readonly_fields = ['codigo_ruta']
 
 @admin.register(PedidoRuta)
 class PedidoRutaAdmin(admin.ModelAdmin):
-    list_display = ['ruta', 'pedido', 'orden_entrega', 'entregado']
-    list_filter = ['entregado']
+    list_display = ['ruta', 'pedido', 'orden_entrega', 'entregado', 'hora_llegada', 'hora_salida']
+    list_filter = ['entregado', 'ruta__estado']
+    search_fields = ['ruta__codigo_ruta', 'pedido__codigo_seguimiento']
 
 @admin.register(Vehiculo)
 class VehiculoAdmin(admin.ModelAdmin):
-    list_display = ['placa', 'marca', 'modelo', 'activo']
+    list_display = ['placa', 'tipo', 'marca', 'modelo', 'transportista', 'capacidad_carga_kg', 'activo']
+    list_filter = ['tipo', 'activo', 'transportista']
+    search_fields = ['placa', 'marca', 'modelo']
+
+# ✅ NUEVOS: Transportistas
+@admin.register(Transportista)
+class TransportistaAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'contacto', 'telefono', 'email', 'activo']
     list_filter = ['activo']
-    search_fields = ['placa']
+    search_fields = ['nombre', 'contacto', 'nit']
+
+# ✅ NUEVOS: Documentos de Vehículos
+@admin.register(DocumentoVehiculo)
+class DocumentoVehiculoAdmin(admin.ModelAdmin):
+    list_display = ['vehiculo', 'tipo', 'numero_documento', 'fecha_vencimiento', 'estado_documento', 'dias_restantes']
+    list_filter = ['tipo', 'fecha_vencimiento']
+    search_fields = ['vehiculo__placa', 'numero_documento']
+    date_hierarchy = 'fecha_vencimiento'
+    
+    def estado_documento(self, obj):
+        from datetime import date
+        if obj.esta_vencido:
+            return "❌ VENCIDO"
+        elif obj.dias_para_vencer <= 30:
+            return "⚠️ POR VENCER"
+        return "✅ VIGENTE"
+    estado_documento.short_description = "Estado"
+    
+    def dias_restantes(self, obj):
+        dias = obj.dias_para_vencer
+        if dias < 0:
+            return f"{abs(dias)} días vencido"
+        return f"{dias} días"
+    dias_restantes.short_description = "Días Restantes"
+
+# ✅ NUEVOS: Puntos de Siembra
+@admin.register(PuntoSiembra)
+class PuntoSiembraAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'municipio', 'departamento', 'contacto', 'telefono', 'activo']
+    list_filter = ['departamento', 'activo']
+    search_fields = ['nombre', 'contacto', 'aldea_colonia']
+
+# ✅ NUEVOS: Fincas/Viveros
+@admin.register(Finca)
+class FincaAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'municipio', 'departamento', 'contacto', 'telefono', 'usuario', 'activo']
+    list_filter = ['departamento', 'activo']
+    search_fields = ['nombre', 'contacto', 'aldea_colonia']
+    raw_id_fields = ['usuario']  # Para mejor rendimiento si hay muchos usuarios
 
 # Notificaciones
 @admin.register(Notificacion)

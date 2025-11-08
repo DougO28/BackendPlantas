@@ -18,51 +18,68 @@ from .pedidos import PedidoViewSet
 # Logística
 from .logistica import RutaEntregaViewSet, VehiculoViewSet
 
+# Catálogos Logística (NUEVO - AGREGAR ESTA LÍNEA)
+from .catalogos_logistica import (
+    TransportistaViewSet,
+    DocumentoVehiculoViewSet,
+    PuntoSiembraViewSet,
+    FincaViewSet
+)
+
 # Notificaciones
 from .notificaciones import NotificacionViewSet
 
-
-
 # Dashboard
 from .dashboard import (
-    DashboardView, 
-    MetricasView, 
+    DashboardView,
     DashboardEstadisticasView,
-    ExportarExcelView  
+    MetricasView,
+    ExportarExcelView
 )
 
-# Test Data (TEMPORAL)
-from .test_data import GenerarDatosPruebaView 
+# Otros
+from .test_data import GenerarDatosPruebaView
 
- 
 __all__ = [
     # Auth
-    'CustomTokenObtainPairView', 'ChangePasswordView', 'RegisterView',
+    'CustomTokenObtainPairView',
+    'ChangePasswordView',
+    'RegisterView',
     
     # Usuarios
-    'UsuarioViewSet', 'RolViewSet',
+    'UsuarioViewSet',
+    'RolViewSet',
     
     # Ubicaciones
-    'DepartamentoViewSet', 'MunicipioViewSet',
+    'DepartamentoViewSet',
+    'MunicipioViewSet',
     
     # Catálogo
-    'CatalogoPilonViewSet', 'CategoriaPlantaViewSet',
+    'CatalogoPilonViewSet',
+    'CategoriaPlantaViewSet',
     
     # Pedidos
     'PedidoViewSet',
     
     # Logística
-    'RutaEntregaViewSet', 'VehiculoViewSet',
+    'RutaEntregaViewSet',
+    'VehiculoViewSet',
+    
+    # Catálogos Logística (AGREGAR ESTOS)
+    'TransportistaViewSet',
+    'DocumentoVehiculoViewSet',
+    'PuntoSiembraViewSet',
+    'FincaViewSet',
     
     # Notificaciones
     'NotificacionViewSet',
     
     # Dashboard
-    'DashboardView', 
-    'MetricasView', 
+    'DashboardView',
     'DashboardEstadisticasView',
-    'ExportarExcelView',  # ✅ AGREGADO
+    'MetricasView',
+    'ExportarExcelView',
     
-    # Test Data (TEMPORAL)
+    # Otros
     'GenerarDatosPruebaView',
 ]
