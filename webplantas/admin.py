@@ -10,6 +10,10 @@ from webplantas.models import (
     Notificacion
 )
 
+admin.site.site_header = "Administración Plantas Agriconecta"
+admin.site.site_title = "Proyecto Plantas Admin"
+admin.site.index_title = "Panel de administración"
+
 # Usuarios
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
