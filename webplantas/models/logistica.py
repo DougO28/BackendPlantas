@@ -294,7 +294,7 @@ class RutaEntrega(models.Model):
         return True, "Capacidad OK"
 
 
-# ============= PARADAS/ENTREGAS AMPLIADAS
+#  PARADAS/ENTREGAS AMPLIADAS
 class PedidoRuta(models.Model):
     """Relación entre pedidos y rutas con orden de entrega (PARADAS)"""
     
