@@ -11,7 +11,7 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ============= SEGURIDAD =============
+# SEGURIDAD 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-desarrollo-local-proyecto-plantas-2025-temp-key')
 
@@ -20,7 +20,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-# ============= APLICACIONES =============
+# APLICACIONES 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +42,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ Para servir archivos estáticos
+    'whitenoise.middleware.WhiteNoiseMiddleware',  #  Para servir archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,8 +71,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ============= BASE DE DATOS =============
-# Usa DATABASE_URL si existe (Render/producción), sino usa configuración local
+# BASE DE DATOS
+# Usar DATABASE_URL si existe (Render/producción), sino usar configuración local
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
@@ -96,7 +96,7 @@ else:
         }
     }
 
-# ============= VALIDACIÓN DE CONTRASEÑAS =============
+#  VALIDACIÓN DE CONTRASEÑAS 
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -112,13 +112,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# ============= INTERNACIONALIZACIÓN =============
+# INTERNACIONALIZACIÓN 
 LANGUAGE_CODE = 'es-gt'
 TIME_ZONE = 'America/Guatemala'
 USE_I18N = True
 USE_TZ = True
 
-# ============= ARCHIVOS ESTÁTICOS =============
+# ARCHIVOS ESTÁTICOS 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = []
@@ -126,15 +126,15 @@ STATICFILES_DIRS = []
 # Configuración de Whitenoise para servir archivos estáticos
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ============= ARCHIVOS MEDIA =============
+# ARCHIVOS MEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ============= MODELO DE USUARIO =============
+#  MODELO DE USUARIO 
 AUTH_USER_MODEL = 'webplantas.Usuario'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ============= REST FRAMEWORK =============
+# REST FRAMEWORK 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -147,17 +147,17 @@ REST_FRAMEWORK = {
     ],
 }
 
-# ============= JWT SETTINGS =============
+# JWT SETTINGS 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-# ============= CORS =============
+#  CORS 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
-# ============= SEGURIDAD EN PRODUCCIÓN =============
+# SEGURIDAD EN PRODUCCIÓN 
 if not DEBUG:
     # HTTPS
     SECURE_SSL_REDIRECT = True
