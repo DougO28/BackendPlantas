@@ -245,7 +245,7 @@ class RutaEntrega(models.Model):
         help_text="Kilómetros estimados de la ruta"
     )
     
-    # Etiquetas (JSON field para flexibilidad)
+    # Etiquetas 
     etiquetas = models.JSONField(default=list, blank=True, help_text="Lista de etiquetas aplicadas")
     
     # Ruta plantilla (para duplicar)
