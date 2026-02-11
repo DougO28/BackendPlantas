@@ -6,10 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from django.utils import timezone
-from django.db.models import Count, Q  # ✅ AGREGAR
-from datetime import date  # ✅ AGREGAR
+from django.db.models import Count, Q  
+from datetime import date  
 
-from webplantas.models import RutaEntrega, PedidoRuta, Vehiculo, Pedido  # ✅ AGREGAR Pedido
+from webplantas.models import RutaEntrega, PedidoRuta, Vehiculo, Pedido  
 from webplantas.serializers import (
     RutaEntregaListSerializer, RutaEntregaDetailSerializer,
     RutaEntregaCreateSerializer, VehiculoSerializer,
@@ -53,7 +53,7 @@ class RutaEntregaViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    # ✅ AGREGAR ESTE MÉTODO
+    # AGREGAR ESTE MÉTODO
     @action(detail=False, methods=['get'])
     def estadisticas(self, request):
         """Obtener estadísticas de logística"""
