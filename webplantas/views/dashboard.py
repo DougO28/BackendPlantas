@@ -71,8 +71,8 @@ class DashboardEstadisticasView(APIView):
         hoy = ahora_local.date()
         
         print(f"\n{'='*50}")
-        print(f"🔍 FILTRO SELECCIONADO: {filtro}")
-        print(f"📅 HOY: {hoy}")
+        print(f" FILTRO SELECCIONADO: {filtro}")
+        print(f" HOY: {hoy}")
         
         # ============= CALCULAR RANGO DE FECHAS SEGÚN FILTRO =============
         if filtro == 'personalizado' and fecha_inicio_param and fecha_fin_param:
@@ -80,19 +80,19 @@ class DashboardEstadisticasView(APIView):
             fecha_inicio = timezone.datetime.strptime(fecha_inicio_param, '%Y-%m-%d').date()
             fecha_fin = timezone.datetime.strptime(fecha_fin_param, '%Y-%m-%d').date()
             dias_rango = (fecha_fin - fecha_inicio).days + 1
-            print(f"📅 Personalizado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            print(f" Personalizado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
             
         elif filtro == 'ultimos_30_dias':
             fecha_inicio = hoy - timedelta(days=29)
             fecha_fin = hoy
             dias_rango = 30
-            print(f"📅 Últimos 30 días: {fecha_inicio} a {fecha_fin}")
+            print(f" Últimos 30 días: {fecha_inicio} a {fecha_fin}")
             
         elif filtro == 'este_mes':
             fecha_inicio = hoy.replace(day=1)
             fecha_fin = hoy
             dias_rango = (fecha_fin - fecha_inicio).days + 1
-            print(f"📅 Este mes: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            print(f" Este mes: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
             
         elif filtro == 'mes_pasado':
             # Primer día del mes pasado
@@ -101,13 +101,13 @@ class DashboardEstadisticasView(APIView):
             fecha_inicio = ultimo_dia_mes_pasado.replace(day=1)
             fecha_fin = ultimo_dia_mes_pasado
             dias_rango = (fecha_fin - fecha_inicio).days + 1
-            print(f"📅 Mes pasado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
+            print(f" Mes pasado: {fecha_inicio} a {fecha_fin} ({dias_rango} días)")
             
         else:  # 'ultimos_7_dias' (default)
             fecha_inicio = hoy - timedelta(days=6)
             fecha_fin = hoy
             dias_rango = 7
-            print(f"📅 Últimos 7 días: {fecha_inicio} a {fecha_fin}")
+            print(f"Últimos 7 días: {fecha_inicio} a {fecha_fin}")
         
         # ============= CREAR RANGOS DE DATETIME =============
         inicio_rango_dt = timezone.make_aware(
@@ -184,7 +184,7 @@ class DashboardEstadisticasView(APIView):
         for estado in estados:
             pedidos_por_estado[estado['estado']] = estado['total']
         
-        # ============= TOP 5 PRODUCTOS MÁS VENDIDOS =============
+        #  TOP 5 PRODUCTOS MÁS VENDIDOS 
         # Usar el rango del filtro seleccionado
         productos_vendidos = DetallePedido.objects.filter(
             pedido__activo=True,
@@ -212,7 +212,7 @@ class DashboardEstadisticasView(APIView):
             for p in productos_vendidos
         ]
         
-        # ============= STOCK BAJO =============
+        #  STOCK BAJO 
         stock_bajo = CatalogoPilon.objects.filter(
             activo=True,
             stock__lte=F('stock_minimo')
@@ -239,10 +239,10 @@ class DashboardEstadisticasView(APIView):
             for p in stock_bajo
         ]
         
-        # ============= VENTAS DIARIAS DEL RANGO =============
+        #  VENTAS DIARIAS DEL RANGO
         ventas_diarias = []
         
-        print(f"\n📊 Generando ventas diarias para {dias_rango} días")
+        print(f"\n Generando ventas diarias para {dias_rango} días")
         
         # Generar ventas para cada día del rango
         for i in range(dias_rango):
@@ -281,7 +281,7 @@ class DashboardEstadisticasView(APIView):
         
         print(f"{'='*50}\n")
         
-        # ============= RESPUESTA =============
+        #  RESPUESTA 
         data = {
             'ventas': {
                 'total_ventas_hoy': float(ventas_hoy),
@@ -351,7 +351,7 @@ class ExportarExcelView(APIView):
     permission_classes = [IsAuthenticated, EsPersonalViveroOAdmin]
     
     def get(self, request):
-        # ✅ IMPORTS DENTRO DE LA FUNCIÓN (Evita el warning de Pylance)
+        # IMPORTS DENTRO DE LA FUNCIÓN (Evita el warning de Pylance)
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -361,7 +361,7 @@ class ExportarExcelView(APIView):
                 'error': 'openpyxl no está instalado. Ejecuta: pip install openpyxl'
             }, status=500)
         
-        # Obtener parámetros de filtro (mismo que DashboardEstadisticasView)
+        # Obtener parametros de filtro (mismo que DashboardEstadisticasView)
         filtro = request.query_params.get('filtro', 'ultimos_7_dias')
         fecha_inicio_param = request.query_params.get('fecha_inicio')
         fecha_fin_param = request.query_params.get('fecha_fin')
@@ -435,7 +435,7 @@ class ExportarExcelView(APIView):
         # Crear workbook
         wb = Workbook()
         
-        # ========== HOJA 1: RESUMEN ==========
+        # HOJA 1: RESUMEN 
         ws1 = wb.active
         ws1.title = "Resumen"
         
@@ -491,7 +491,7 @@ class ExportarExcelView(APIView):
         ws1.column_dimensions['A'].width = 30
         ws1.column_dimensions['B'].width = 20
         
-        # ========== HOJA 2: TOP PRODUCTOS ==========
+        #  HOJA 2: TOP PRODUCTOS 
         ws2 = wb.create_sheet("Top Productos")
         
         ws2['A1'] = "TOP 10 PRODUCTOS MÁS VENDIDOS"
@@ -522,7 +522,7 @@ class ExportarExcelView(APIView):
         ws2.column_dimensions['C'].width = 18
         ws2.column_dimensions['D'].width = 18
         
-        # ========== HOJA 3: STOCK BAJO ==========
+        #  HOJA 3: STOCK BAJO 
         ws3 = wb.create_sheet("Stock Bajo")
         
         ws3['A1'] = "PRODUCTOS CON STOCK BAJO"
