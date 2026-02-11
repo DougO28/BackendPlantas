@@ -124,14 +124,14 @@ class DocumentoVehiculoAdmin(admin.ModelAdmin):
         return f"{dias} días"
     dias_restantes.short_description = "Días Restantes"
 
-# ✅ NUEVOS: Puntos de Siembra
+#  Puntos de Siembra
 @admin.register(PuntoSiembra)
 class PuntoSiembraAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'municipio', 'departamento', 'contacto', 'telefono', 'activo']
     list_filter = ['departamento', 'activo']
     search_fields = ['nombre', 'contacto', 'aldea_colonia']
 
-# ✅ NUEVOS: Fincas/Viveros
+#  Fincas/Viveros
 @admin.register(Finca)
 class FincaAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'municipio', 'departamento', 'contacto', 'telefono', 'usuario', 'activo']

@@ -35,7 +35,7 @@ class Pedido(models.Model):
     nombre_contacto = models.CharField(max_length=100)
     telefono_contacto = models.CharField(max_length=15)
     
-    # ============= CAMPOS ADICIONALES PARA EXCEL =============
+    # CAMPOS ADICIONALES PARA EXCEL 
     
     # Nombres separados (además de nombre_contacto que ya tienes)
     nombres_cliente = models.CharField(max_length=100, blank=True)
@@ -91,7 +91,7 @@ class Pedido(models.Model):
     orden_cerrada = models.BooleanField(default=False, help_text="¿La orden está completamente cerrada?")
     comentarios_internos = models.TextField(blank=True, help_text="Comentarios adicionales del equipo")
     
-    # ============= FIN CAMPOS ADICIONALES =============
+    # FIN CAMPOS ADICIONALES 
     
     # Valores
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
