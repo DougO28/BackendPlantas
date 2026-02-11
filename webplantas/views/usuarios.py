@@ -34,7 +34,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         return UsuarioListSerializer
     
     def get_permissions(self):
-        # ⬅️ IMPORTANTE: Permitir reset_password sin autenticación
+        # IMPORTANTE: Permitir reset_password sin autenticación
         if self.action == 'reset_password':
             return [AllowAny()]
         
@@ -85,8 +85,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def reset_password(self, request):
         """Resetear contraseña sin autenticación (para recuperación)"""
-        print("🔍 RESET PASSWORD ENDPOINT LLAMADO")
-        print("📧 Email:", request.data.get('email'))
+        print(" RESET PASSWORD ENDPOINT LLAMADO")
+        print(" Email:", request.data.get('email'))
         
         email = request.data.get('email')
         new_password = request.data.get('new_password')
@@ -108,7 +108,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             usuario.set_password(new_password)
             usuario.save()
             
-            print(f"✅ Contraseña actualizada para: {usuario.nombre_completo}")
+            print(f"Contraseña actualizada para: {usuario.nombre_completo}")
             
             return Response({
                 'mensaje': 'Contraseña actualizada exitosamente',
