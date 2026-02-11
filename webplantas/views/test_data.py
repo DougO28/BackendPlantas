@@ -53,7 +53,7 @@ class GenerarDatosPruebaView(APIView):
                 
                 pedidos_creados = 0
                 
-                # 🔧 USAR timezone.localtime() para obtener la fecha local
+                #  USAR timezone.localtime() para obtener la fecha local
                 ahora = timezone.localtime(timezone.now())
                 hoy = ahora.date()
                 
@@ -85,7 +85,7 @@ class GenerarDatosPruebaView(APIView):
                         nombre = random.choice(nombres_ejemplo)
                         apellido = random.choice(apellidos_ejemplo)
                         
-                        # 🔧 Crear fecha y hora aleatoria ese día (TIMEZONE AWARE)
+                        #  Crear fecha y hora aleatoria ese día (TIMEZONE AWARE)
                         hora_aleatoria = random.randint(8, 18)  # Entre 8 AM y 6 PM
                         minuto_aleatorio = random.randint(0, 59)
                         
@@ -95,13 +95,13 @@ class GenerarDatosPruebaView(APIView):
                             hora_aleatoria, minuto_aleatorio, 0
                         )
                         
-                        # 🔧 Convertir a timezone aware usando la zona horaria actual
+                        #  Convertir a timezone aware usando la zona horaria actual
                         fecha_pedido = timezone.make_aware(
                             fecha_pedido_naive,
                             timezone.get_current_timezone()
                         )
                         
-                        # 🔧 PRIMERO: Crear pedido SIN total (se calculará después)
+                        #  PRIMERO: Crear pedido SIN total (se calculará después)
                         pedido = Pedido.objects.create(
                             usuario=usuario,
                             municipio_entrega=municipio,
@@ -150,7 +150,7 @@ class GenerarDatosPruebaView(APIView):
                         pedido.refresh_from_db()
                         
                         if pedido.total == 0:
-                            print(f"   ⚠️  ERROR: Pedido {pedido.id} tiene total=0 después de guardar!")
+                            print(f"    ERROR: Pedido {pedido.id} tiene total=0 después de guardar!")
                             print(f"      Total calculado: {total_calculado}")
                             print(f"      Detalles: {pedido.detallepedido_set.count()}")
                         else:
@@ -162,7 +162,7 @@ class GenerarDatosPruebaView(APIView):
                             pedido=pedido,
                             estado_nuevo=estado,
                             usuario_cambio=request.user,
-                            comentario='🧪 Pedido de prueba generado'
+                            comentario=' Pedido de prueba generado'
                         )
                         
                         pedidos_creados += 1
